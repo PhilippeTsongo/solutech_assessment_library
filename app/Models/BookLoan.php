@@ -6,23 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Book extends Model
+class BookLoan extends Model
 {
     use HasFactory;
+
     use SoftDeletes;
 
     protected $fillable = [
-        'id', 'name', 'publisher', 'isbn', 'category_id', 'subcategory_id', 'description', 'page', 'image', 'added_by', 'status'
+        'user_id', 'book_id', 'loan_date', 'return_date', 'extended', 'extension_date',
+        'due_date', 'penalty_amount', 'penalty_status', 'status', 'added_by',
     ];
 
-    public function category()
+    public function user()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(User::class);
     }
 
-    public function subCategory()
+    public function book()
     {
-        return $this->belongsTo(SubCategory::class);
+        return $this->belongsTo(Book::class);
     }
 
     public function addedBy()

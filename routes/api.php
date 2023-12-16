@@ -17,7 +17,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\BookLoanController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\BorrowBookController;
+use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 
@@ -65,6 +69,22 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
         //book
         Route::resource('/book', BookController::class);
+
+        //book status
+        Route::post('/book/status/available/{book}', [BookController::class, 'availableStatus']);
+        Route::post('/book/status/unavailable/{book}', [BookController::class, 'unavailableStatus']);
+
+        //book loan 
+        Route::resource('/book_loan', BookLoanController::class);
+        //borrow a book
+        Route::post('/book/borrow/{bookId}', [BookLoanController::class, 'borrowBook']);
+        
+        //Book loan status
+        Route::post('/book/loan/approve/{book_loan}', [BookLoanController::class, 'ApproveBookLoan']);
+        Route::post('/book/loan/reject/{book_loan}', [BookLoanController::class, 'RejectBookLoan']);
+
+        Route::resource('/category', CategoryController::class);
+        Route::resource('/subcategory', SubcategoryController::class);        
 
 
     });

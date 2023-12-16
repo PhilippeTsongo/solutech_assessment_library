@@ -4,14 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use Exception;
 use App\Models\User;
-use App\Models\UserToken;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rules;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Auth\Events\Registered;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -31,7 +26,6 @@ class UserController extends Controller
             }catch(\Exception $e){
                     return response()->json(['message' => 'Failed to fetch users', 'status' => 500]);
         }
-        //return view('users.index', compact('users'));
     }
 
     //CREATE FUNCTION
@@ -105,7 +99,7 @@ class UserController extends Controller
 
         } catch (\Exception $e) {
             // Something went wrong
-            return response()->json(['error' => 'Failed to fetch user. ' . $e->getMessage()], 411);
+            return response()->json(['error' => 'Failed to fetch user. ' . $e->getMessage()], 500);
         }
     }
 
@@ -194,7 +188,7 @@ class UserController extends Controller
             return response()->json(['message' => 'User\'s status changed successfully' , $user, 200]);
         }
         catch (\Exception $e){
-            return response()->json(['message' => 'Error' . $e->getMessage(), 'status' => 500]);
+            return response()->json(['message' => 'Error occured while updating ' . $e->getMessage(), 'status' => 500]);
         }
     }
 
@@ -207,7 +201,7 @@ class UserController extends Controller
             return response()->json(['message' => 'User\'s status changed successfully' , $user, 200]);
         }
         catch (\Exception $e){
-            return response()->json(['message' => 'Error' . $e->getMessage(), 'status' => 500]);
+            return response()->json(['message' => 'Error occured while updating' . $e->getMessage(), 'status' => 500]);
         }
     }
 }
