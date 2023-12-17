@@ -68,12 +68,18 @@ class AuthenticatedSessionController extends Controller
 
         try {
             
-                $user = User::where('id', $request->id)->first();
-            
-                $userToken = UserToken::where('user_id', $user->id)->first();
+                //get the auth user
+                $auth_user = Auth::user();
                 
+                $user = User::where('id', $auth_user->id)->first();
+
+                $userToken = UserToken::where('user_id', $user->id)->first();
+
+                //check if the auth user has tokens and delete them
                 if($userToken != null){
                     $userToken->delete();
+
+                    $user->tokens()->delete();
 
                     return response()->json(['message' => 'Logged out successfully'], 200);
         
@@ -81,7 +87,7 @@ class AuthenticatedSessionController extends Controller
                     return response()->json(["message" => "Not logged in","status" => 200],200);
                 }
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage(), 'status'=> 500], 500);
         }
     }
 }

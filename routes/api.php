@@ -83,6 +83,12 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
         Route::post('/book/loan/approve/{book_loan}', [BookLoanController::class, 'ApproveBookLoan']);
         Route::post('/book/loan/reject/{book_loan}', [BookLoanController::class, 'RejectBookLoan']);
 
+        //Book loan Extend date
+        Route::post('/book/extend/loan/{book_loan}', [BookLoanController::class, 'extendLoan']);
+
+        Route::post('/book/loan/return/{book_loan}', [BookLoanController::class, 'returnBook']);
+
+        
         Route::resource('/category', CategoryController::class);
         Route::resource('/subcategory', SubcategoryController::class);        
 

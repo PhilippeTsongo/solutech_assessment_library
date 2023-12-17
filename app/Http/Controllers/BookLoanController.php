@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class BookLoanController extends Controller
 {
    
+    //List of loan function
     public function index()
     {
         try{
@@ -29,25 +30,16 @@ class BookLoanController extends Controller
         }
     }
 
-   
-    public function create()
-    {
-        //
-    }
-
-   
-    public function store(Request $request)
-    {
-        //
-    }
-
-    
-    public function show(BookLoan $book_loan)
+    //Unique loan function
+    public function show($book_loan)
     {
         try{
+            //find all the loan. All row with the property 'deleted_at' are excluded (soft delete)
+            $book = BookLoan::findOrFail($book_loan);
+
             $data = array(
                 'message' => 'success',
-                'book_loan' => $book_loan,
+                'book_loan' => $book,
                 'status' => 200
             );
             return response()->json($data, 200);
@@ -58,25 +50,7 @@ class BookLoanController extends Controller
         }
     }
 
-    
-    public function edit($id)
-    {
-        //
-    }
-
-    
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-   
-    public function destroy($id)
-    {
-        //
-    }
-
-
+    //borrow book function. it creates a loan and set it to a STATUS status
     public function borrowBook (Request $request, $bookId)
     {
 
@@ -88,11 +62,12 @@ class BookLoanController extends Controller
             // 'extended' => ['required', 'boolean'],
             'extension_date' => $request->get('extended') ? 'required_if:extended,1|nullable|date|after_or_equal:return_date' : '',
             'due_date' => ['required', 'date'],
-            'penalty_amount' => ['required_if:penalty_status,CHARGED', 'nullable', 'numeric', 'min:0'],
             'penalty_status' => ['required', 'in:CHARGED,NOT_CHARGED'],
-            'status' => ['required', 'in:REQUESTED']
+            'penalty_amount' => ['required_if:penalty_status,CHARGED', 'nullable', 'numeric', 'min:0'],
+            // 'status' => ['required', 'in:PENDING']
         ]);
 
+        //return the validation error
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
@@ -117,6 +92,7 @@ class BookLoanController extends Controller
                 return response()->json(['message' => 'You have already sent the request to borrow this book!', 'status' => 411], 411);
             }
 
+            //create the loan
             $create_loan = BookLoan::create([
                 'id' => $random_id,
                 'user_id' => Auth::user()->id,
@@ -128,28 +104,33 @@ class BookLoanController extends Controller
                 'due_date' => $request->due_date,
                 'penalty_amount' => $request->penalty_amount,
                 'penalty_status' => $request->penalty_status,
-                'status' => 'REQUESTED',
-                'added_by' => Auth::user()->id,
+                'status' => 'PENDING',
+                'added_by' => Auth::user()->id // Auth user requesting a loan
 
             ]);
-    
+            
             return response()->json(['message' => 'Request to borrow the book sent successfully. It will be approved shortly! ', 'status' => 200], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error', 'Book not found! ' . $e->getMessage(), 'status' => 500], 500);
+            return response()->json(['error' => 'Book not found! ' . $e->getMessage(), 'status' => 500], 500);
         } 
     }
 
 
-    public function ApproveBookLoan(BookLoan $book_loan)
+    //Approve book loan function
+    public function ApproveBookLoan($book_loan)
     {
         try{
 
+            // Find the loan
+            $loan = BookLoan::findOrFail($book_loan);
+
             //check the current status before to proceed
-            if($book_loan->status == 'APPROVED'){
-                return response()->json(['message' => 'The current book loan\'s status is the same',  'status' => 411], 411);
+            if($loan->status !== 'PENDING'){
+                return response()->json(['message' => 'The book loan\'s status is not pending ',  'status' => 411], 411);
             }
-            $book_loan->update([
-                'status' => 'APPROVED'
+            $loan->update([
+                'status' => 'APPROVED',
+                'added_by' => Auth::user()->id //Auth Admin approving a loan
             ]);
             return response()->json(['message' => 'Book loan\'s status changed to Approved successfully',  'status' => 200], 200);
         }
@@ -158,22 +139,98 @@ class BookLoanController extends Controller
         }
     }
 
-    public function RejectBookLoan(BookLoan $book_loan)
+    //Reject a book loan function
+    public function RejectBookLoan($book_loan)
     {
         try{
+            // Find the loan
+            $loan = BookLoan::findOrFail($book_loan);
 
             //check the current status before to proceed
-            if($book_loan->status == 'REJECTED'){
-                return response()->json(['message' => 'The current book loan\'s status is the same',  'status' => 411], 411);
+            if($loan->status == 'REJECTED'){
+                return response()->json(['message' => 'Current book loan\'s status has already been Rejected',  'status' => 411], 411);
             }
 
-            $book_loan->update([
-                'status' => 'REJECTED'
+            $loan->update([
+                'status' => 'REJECTED',
+                'added_by' => Auth::user()->id //Auth Admin rejecting a loan
             ]);
             return response()->json(['message' => 'Book loan\'s status changed to Rejected successfully',  'status' => 200], 200);
         }
         catch (\Exception $e){
             return response()->json(['message' => 'Error occured while updating ' . $e->getMessage(), 'status' => 500]);
+        }
+    }
+
+
+    public function extendLoan(Request $request, $book_loan)
+    {
+        // Validate request
+        $validator = Validator::make($request->all(), [
+            'extension_date' => 'required|date|after_or_equal:loan_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        
+        try{
+            // Find the loan
+            $loan = BookLoan::findOrFail($book_loan);
+
+            // Check if the loan is approved
+            if ($loan->status !== 'APPROVED') {
+                return response()->json(['message' => 'Loan is not approved.', 'status'=> 411], 411);
+            }
+
+            // Check if the loan has once bee extended to prevent a new extension
+            if ($loan->extended) {
+                return response()->json(['message' => 'Loan is already extended.', 'status'=> 411], 411);
+            }
+
+            // Update loan extension details
+            $loan->extended = true;
+            $loan->extension_date = $request->extension_date;
+            $loan->save();
+
+            return response()->json(['message' => 'Loan extended successfully.']);
+        }catch(\Exception $e){
+            return response()->json(['error' => 'Error occured while extending the loan. ' . $e->getMessage(), 'status' => 500 ], 500);
+        }
+    }
+
+    //Return a book
+    public function returnBook($book_loan)
+    {
+        
+        try{
+            // Find the loan
+            $loan = BookLoan::findOrFail($book_loan);
+
+            // Check if the loan is approved and not already returned
+            if ($loan->status !== 'APPROVED' || $loan->return_date !== null) {
+                return response()->json(['message' => 'Invalid operation.', 'status' => 400], 400);
+            }
+
+            $today = date('Y-m-d');
+            $auth = Auth::user()->id;
+            if($loan->penalty_status == 'CHARGED'){
+                $loan->update([
+                    'due_date' => $today,
+                ]);
+            }
+
+            // Update loan return details
+            $loan->update([
+                'return_date' => $today,
+                'status' => 'RETURNED',
+                'added_by' => $auth
+            ]);
+
+            return response()->json(['message' => 'Book returned successfully.']);
+
+        }catch(\Exception $e){
+            return response()->json(['error' => 'Error occured while returning the loan. ' . $e->getMessage(), 'status' => 500 ], 500);
         }
     }
 }

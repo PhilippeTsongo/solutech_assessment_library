@@ -22,7 +22,7 @@ return new class extends Migration
             $table->date('due_date');
             $table->decimal('penalty_amount', 8, 2)->default(0.0);
             $table->string('penalty_status')->nullable();
-            $table->string('status')->default('REQUESTED');
+            $table->string('status')->default('PENDING');
             $table->unsignedBigInteger('added_by');
             $table->timestamps();
             $table->softDeletes(); // for 'deleted_at' column

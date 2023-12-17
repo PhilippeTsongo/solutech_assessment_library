@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Book extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'id', 'name', 'publisher', 'isbn', 'category_id', 'subcategory_id', 'description', 'page', 'image', 'added_by', 'status'
