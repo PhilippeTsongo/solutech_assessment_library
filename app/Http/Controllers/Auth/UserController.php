@@ -43,7 +43,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'unique:users'],
             'name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'profile' => ['nullable', 'image', 'mimes:jpeg,png,gif,bmp,tiff,webp,svg,ico,jpg,jfif,pjpeg,pjp', 'max:5048'], // Allow various image formats with a max size of 5MB
+            'profile' => ['nullable', 'image', 'mimes:jpeg,png,gif,bmp,tiff,webp,svg,ico,jpg,jfif,pjpeg,pjp', 'max:2048'], // Allow various image formats with a max size of 5MB
 
         ]);
 
@@ -51,21 +51,17 @@ class UserController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $last_id = User::max('id');
-        $id = random_int(100000, 900000) . ($last_id + 1); // Generates a cryptographically secure random number
+        $id = random_int(100000, 900000)  + 1; // Generates a cryptographically secure random number
         try {
 
-            //User Profile
-            if ($request->hasFile('profile')) {
+           if ($request->hasFile('profile')) {
                 $file = $request->file('profile');
-                // Rename the file using a unique name and the original extension
-                $fileName = $id . '.' . $file->getClientOriginalExtension();
-                $destination = public_path().'/IMAGES/profile';
-                // Store the file in the 'images/profile' directory with the new name
-                $path = $file->move($destination, $fileName);
+                $fileName = $id;
+                $path = $file->storeAs('IMAGES/PROFILE', $fileName, 'public');
 
+                // $path now contains the path in the storage/app/public directory
             } else {
-                $path = ''; // If no file is uploaded, set path to null or handle it as needed
+                $path = null; // If no file is uploaded, set path to null or handle it as needed
             }
 
             // Create user
@@ -75,6 +71,7 @@ class UserController extends Controller
                 'name' => $request->name,
                 'password' => Hash::make($request->password),
                 'status' => 'ACTIVE',
+                'profile' => $path,
                 'role_id' => $request->role
             ]);
            
@@ -142,14 +139,12 @@ class UserController extends Controller
             //User Profile
             if ($request->hasFile('profile')) {
                 $file = $request->file('profile');
-                // Rename the file using a unique name and the original extension
-                $fileName = $id . '.' . $file->getClientOriginalExtension();
-                $destination = public_path().'/IMAGES/profile';
-                // Store the file in the 'images/profile' directory with the new name
-                $path = $file->move($destination, $fileName);
+                $fileName = $id;
+                $path = $file->storeAs('IMAGES/PROFILE', $fileName, 'public');
 
+                // $path now contains the path in the storage/app/public directory
             } else {
-                $path = ''; // If no file is uploaded, set path to null or handle it as needed
+                $path = null; // If no file is uploaded, set path to null or handle it as needed
             }
 
             $user->update([
@@ -168,11 +163,14 @@ class UserController extends Controller
 
     }
 
-    public function destroy(User $user)
+    public function destroy($user)
     {
         try{
-            $user->delete();
-            return response()->json(['message' => 'User Deleted successfully' , $user, 200]);
+
+            $userData = User::findOrFail($user);
+
+            $userData->delete();
+            return response()->json(['message' => 'User Deleted successfully' , $userData, 200]);
         }
         catch (\Exception $e){
             return response()->json(['message' => 'Pas d\'', 'status' => 411]);

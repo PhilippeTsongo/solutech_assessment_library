@@ -20,6 +20,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\BookLoanController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\Auth\UserRoleController;
 use App\Http\Controllers\BorrowBookController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -53,7 +54,10 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
     Route::middleware('auth:sanctum')->group(function () {
 
         //user
+        Route::get('/user/authenticated', [AuthenticatedSessionController::class, 'authenticatedUser']);
+
         Route::resource('/user', UserController::class);
+        Route::resource('/user/role', UserRoleController::class);
 
         //user status
         Route::post('/user/activate/status/{user}', [UserController::class, 'activateUserStatus']);

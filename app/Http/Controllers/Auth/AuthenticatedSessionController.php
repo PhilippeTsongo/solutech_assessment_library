@@ -17,6 +17,17 @@ use Illuminate\Support\Facades\Validator;
 class AuthenticatedSessionController extends Controller
 {
    
+    public function authenticatedUser()
+    {
+        $user = Auth::user();
+
+        return response()->json([
+            "message" => "success", 
+            "status" => 200,
+            "user" => $user
+        ],200);
+    }
+
     public function store(Request $request)
     {
         
