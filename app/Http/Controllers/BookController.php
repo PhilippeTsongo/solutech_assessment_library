@@ -58,17 +58,17 @@ class BookController extends Controller
         try {   
 
             $random_id = random_int(1000000, 9000000) + 1; // Generates a cryptographically secure random number
-            //book image
+            //book's image
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
-                // Rename the file using a unique name and the original extension
-                $fileName = $random_id . '.' . $file->getClientOriginalExtension();
-                $destination = public_path().'/IMAGES/BOOKS';
-                // Store the file in the 'images/profile' directory with the new name
-                $path = $file->move($destination, $fileName);
+                $fileName = $id;
+
+                //path in the storage/app/public directory
+
+                $path = $file->storeAs('IMAGES/BOOKS', $fileName, 'public');
 
             } else {
-                $path = ''; // If no file is uploaded, set path to null or handle it as needed
+                $path = null; // If no file is uploaded, set path to null
             }
 
 
@@ -140,29 +140,27 @@ class BookController extends Controller
     
             $book->fill($request->all());
         
+            //book's image
             if ($request->hasFile('image')) {
+
                 // Delete the existing image file
                 if ($book->image) {
-                    Storage::disk('public/IMAGES/BOOKS')->delete($book->image);
+                    Storage::disk('public')->delete($book->image);
                 }
         
-                // Save the new image file
-                if ($request->hasFile('image')) {
-                    $file = $request->file('image');
-                    // Rename the file using a unique name and the original extension
-                    $fileName = $random_id . '.' . $file->getClientOriginalExtension();
-                    $destination = public_path().'/IMAGES/BOOKS';
-                    // Store the file in the 'images/profile' directory with the new name
-                    $path = $file->move($destination, $fileName);
-    
-                } else {
-                    $path = ''; // If no file is uploaded, set path to null or handle it as needed
-                }
-                
-                $book->image = $path;
-                $book->added_by = Auth::id();
+                $file = $request->file('image');
+                $fileName = $id;
 
+                //path in the storage/app/public directory
+
+                $path = $file->storeAs('IMAGES/BOOKS', $fileName, 'public');
+
+            } else {
+                $path = null; // If no file is uploaded, set path to null
             }
+                
+            $book->image = $path;
+            $book->added_by = Auth::id();            
         
             $book->save();
         
