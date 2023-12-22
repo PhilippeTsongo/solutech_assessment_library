@@ -17,17 +17,33 @@ class BookController extends Controller
     public function index()
     {
         try{
-            $books = Book::all();
+            $books = Book::orderBy('created_at', 'DESC')->get();
+
+            $available_books = Book::where('status', 'AVAILABLE')->get();
+            $unavailable_books = Book::where('status', 'UNAVAILABLE')->get();
+
+            foreach ($books as $book) {
+                $book_category = $book->category;
+                $book_sub_category = $book->subCategory;
+            }
+
+            $available = $available_books->count();
+            $unavailable = $unavailable_books->count();
+            $total = $books->count();
+
             $data = array(
                 'message' => "success",
                 'books' => $books,
+                'available' => $available,
+                'unavailable' => $unavailable,
+                'total' => $total,
                 'status' => 200
             );
                 
             return response()->json($data, 200);
             
             }catch(\Exception $e){
-                    return response()->json(['message' => 'Failed to fetch books', 'status' => 500]);
+                    return response()->json(['message' => 'Failed to fetch books ' .$e->getMessage(), 'status' => 500]);
         }
     }
 
@@ -187,7 +203,7 @@ class BookController extends Controller
             // Soft delete the book The book will not be deleted instead the property deleted-at with contain the value
             $book->delete();
     
-            return response()->json(['success', 'Book deleted successfully!', 'status' => 200], 200);
+            return response()->json(['message' => 'Book deleted successfully!', 'status' => 200], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['error', 'Book not found! ' . $e->getMessage(), 'status' => 411], 411);
         } catch (\Exception $e) {

@@ -55,7 +55,7 @@ class AuthenticatedSessionController extends Controller
                         ]);
 
                         $data=array(
-                            'message'=>'User authenticated',
+                            'message'=>'Authenticated',
                             'user' => $user,
                             'accessToken'=>$token,
                             'status'=>200

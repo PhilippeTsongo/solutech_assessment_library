@@ -11,17 +11,26 @@ class CategoryController extends Controller
     public function index()
     {
         try{
-            $categories = Category::all();
+            $categories = Category::orderBy('created_at', 'DESC')->get();
+           
+            foreach ($categories as $category_book) {
+                $number_of_books = $category_book->books;
+                $number_of_sub_categories = $category_book->subCategories;
+            }
+
+            $total = $categories->count();
+
             $data = array(
                 'message' => "success",
-                'categoriess' => $categories,
+                'categories' => $categories,
+                'total' => $total,
                 'status' => 200
             );
                 
             return response()->json($data, 200);
             
             }catch(\Exception $e){
-                    return response()->json(['message' => 'Failed to fetch Categories', 'status' => 500]);
+                    return response()->json(['message' => 'Failed to fetch Categories' . $e->getMessage(), 'status' => 500]);
         }
     }
 
@@ -44,8 +53,7 @@ class CategoryController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $last_id = Category::max('id');
-        $id = random_int(100000, 900000) . ($last_id + 1); // Generates a cryptographically secure random number
+        $id = random_int(100000, 900000)  + 1; // Generates a cryptographically secure random number
         try {
 
             // Create Category
@@ -54,7 +62,7 @@ class CategoryController extends Controller
                 'name' => $request->name,
             ]);
            
-            return response()->json(['message' => 'Category created successfully', 'category' => $category], 201);
+            return response()->json(['message' => 'Category created successfully', 'category' => $category], 200);
         } catch (\Exception $e) {
             // Something went wrong
             return response()->json(['error' => 'Failed to create Category. ' . $e->getMessage()], 500);
@@ -115,7 +123,7 @@ class CategoryController extends Controller
                 'name' => $request->name,
             ]);
 
-            return response()->json(['message' => 'category update successfully', 'category' => $category], 201);
+            return response()->json(['message' => 'category update successfully', 'category' => $category], 200);
         } catch (\Exception $e) {
             // Something went wrong
             return response()->json(['error' => 'Failed to update category. ' . $e->getMessage()], 500);

@@ -13,16 +13,24 @@ class SubcategoryController extends Controller
     {
         try{
             $sub_categories = Subcategory::all();
+
+            foreach ($sub_categories as $sub_category) {
+                $sub_category_category = $sub_category->category;
+            }
+           
+            $total = $sub_categories->count();
+
             $data = array(
                 'message' => "success",
-                'sub_categories' => $sub_categories,
+                'subcategories' => $sub_categories,
+                'total' => $total,
                 'status' => 200
             );
                 
             return response()->json($data, 200);
             
             }catch(\Exception $e){
-                    return response()->json(['message' => 'Failed to fetch sub categories', 'status' => 500]);
+                    return response()->json(['message' => 'Failed to fetch sub categories ' . $e->getMessage() , 'status' => 500]);
         }
     }
 
@@ -47,8 +55,7 @@ class SubcategoryController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $last_id = Subcategory::max('id');
-        $id = random_int(100000, 900000) . ($last_id + 1); // Generates a cryptographically secure random number
+        $id = random_int(100000, 900000)  + 1; // Generates a cryptographically secure random number
         try {
 
             // Create Subcategory

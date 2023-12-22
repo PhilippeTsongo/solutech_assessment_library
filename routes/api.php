@@ -56,8 +56,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
         //user
         Route::get('/user/authenticated', [AuthenticatedSessionController::class, 'authenticatedUser']);
 
-        Route::resource('/user', UserController::class);
         Route::resource('/user/role', UserRoleController::class);
+        Route::resource('/user', UserController::class);
 
         //user status
         Route::post('/user/activate/status/{user}', [UserController::class, 'activateUserStatus']);

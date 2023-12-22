@@ -2,10 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Like;
-use App\Models\Post;
 use App\Models\Role;
-use App\Models\Comment;
 use App\Models\UserToken;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;

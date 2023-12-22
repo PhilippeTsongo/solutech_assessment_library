@@ -9,23 +9,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class UserController extends Controller
+class UserRoleController extends Controller
 {
     public function index()
     {
         try{
-            $roles = Role::all();
+            $roles = Role::where('status', 'ACTIVE')->get();
 
             $data = array(
                 'message' => "success",
-                'users' => $roles,
+                'roles' => $roles,
                 'status' => 200
             );
                 
-            return response()->json([$data, 'status' => 200]);
+            return response()->json($data);
             
-            }catch(\Exception $e){
-                    return response()->json(['message' => 'Failed to fetch users role', 'status' => 500]);
+        }catch(\Exception $e){
+            return response()->json(['message' => 'Failed to fetch users role', 'status' => 500]);
         }
     }
 
@@ -50,8 +50,6 @@ class UserController extends Controller
 
         try {
 
-            
-
             // Create user
             $role = Role::create([
                 'name' => $request->name,
@@ -72,14 +70,14 @@ class UserController extends Controller
         try{
             $data = array(
                 'message' => 'success',
-                'user' => $role,
+                'role' => $role,
                 'status' => 200
             );
             return response()->json($data, 200);
 
         } catch (\Exception $e) {
             // Something went wrong
-            return response()->json(['error' => 'Failed to fetch role. ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to fetch users role. ' . $e->getMessage()], 500);
         }
     }
 
@@ -90,14 +88,14 @@ class UserController extends Controller
         try{
             $data = array(
                 'message' => 'success',
-                'user' => $role,
+                'role' => $role,
                 'status' => 200
             );
             return response()->json($data, 200);
             
         } catch (\Exception $e) {
             // Something went wrong
-            return response()->json(['error' => 'Failed to fetch role. ' . $e->getMessage()], 411);
+            return response()->json(['error' => 'Failed to fetch users role. ' . $e->getMessage()], 411);
         }
     }
 

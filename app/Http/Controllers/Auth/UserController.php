@@ -14,14 +14,27 @@ class UserController extends Controller
     public function index()
     {
         try{
-            $users = User::all();
+            $users = User::orderBy('created_at', 'DESC')->get();
+            $active_users = User::where('status', 'ACTIVE')->get();
+            $inactive_users = User::where('status', 'INACTIVE')->get();
+
+            foreach ($users as $user) {
+                $user_role = $user->role;
+            }
+            $active = $active_users->count();
+            $inactive = $inactive_users->count();
+            $total = $users->count();
+
             $data = array(
                 'message' => "success",
                 'users' => $users,
+                'active' => $active,
+                'inactive' => $inactive,
+                'total' => $total,
                 'status' => 200
             );
                 
-            return response()->json($data, 200);
+            return response()->json($data);
             
             }catch(\Exception $e){
                     return response()->json(['message' => 'Failed to fetch users', 'status' => 500]);
@@ -43,7 +56,8 @@ class UserController extends Controller
             'email' => ['required', 'email', 'unique:users'],
             'name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'profile' => ['nullable', 'image', 'mimes:jpeg,png,gif,bmp,tiff,webp,svg,ico,jpg,jfif,pjpeg,pjp', 'max:2048'], // Allow various image formats with a max size of 5MB
+            'profile' => ['nullable', 'mimes:jpeg,png,gif,bmp,tiff,webp,svg,ico,image/jpeg,image/png,image/gif,image/bmp,image/tiff,image/webp,image/svg+xml,image/x-icon', 'max:5048']
+ // Allow various image formats with a max size of 5MB
 
         ]);
 
@@ -56,6 +70,7 @@ class UserController extends Controller
 
            if ($request->hasFile('profile')) {
                 $file = $request->file('profile');
+
                 $fileName = $id;
                 $path = $file->storeAs('IMAGES/PROFILE', $fileName, 'public');
 
@@ -75,10 +90,12 @@ class UserController extends Controller
                 'role_id' => $request->role
             ]);
            
-            return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
+            // return response()->json(['message' => 'User created successfully', 'user' => $user], 201);
+            return response()->json(['message' => 'User created successfully', $path, 201]);
+
         } catch (\Exception $e) {
             // Something went wrong
-            return response()->json(['error' => 'Failed to create user. ' . $e->getMessage()], 500);
+            return response()->json(['errors' => 'Failed to create user. ' . $e->getMessage()], 500);
         }
 
     }
@@ -121,11 +138,11 @@ class UserController extends Controller
     //UPDATE FUNCTION
     public function update(Request $request, User $user)
     {
-        
+
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'email'],
             'name' => ['required', 'string', 'max:255'],
-            'profile' => ['nullable', 'image', 'mimes:jpeg,png,gif,bmp,tiff,webp,svg,ico,jpg,jfif,pjpeg,pjp', 'max:5048'], // Allow various image formats with a max size of 5MB
+            // 'profile' => ['nullable', 'mimes:jpeg,png,gif,bmp,tiff,webp,svg,ico,image/jpeg,image/png,image/gif,image/bmp,image/tiff,image/webp,image/svg+xml,image/x-icon', 'max:5048'] // Allow various image formats with a max size of 5MB
 
         ]);
 
@@ -138,6 +155,12 @@ class UserController extends Controller
 
             //User Profile
             if ($request->hasFile('profile')) {
+
+                // Delete the existing image file
+                if ($user->profile) {
+                    Storage::disk('public')->delete($user->profile);
+                }
+
                 $file = $request->file('profile');
                 $fileName = $id;
                 $path = $file->storeAs('IMAGES/PROFILE', $fileName, 'public');
@@ -169,11 +192,15 @@ class UserController extends Controller
 
             $userData = User::findOrFail($user);
 
+            if ($user->profile) {
+                Storage::disk('public')->delete($user->profile);
+            }
+
             $userData->delete();
             return response()->json(['message' => 'User Deleted successfully' , $userData, 200]);
         }
         catch (\Exception $e){
-            return response()->json(['message' => 'Pas d\'', 'status' => 411]);
+            return response()->json(['message' => 'error deleting the user', 'status' => 411]);
         }
     }
 
