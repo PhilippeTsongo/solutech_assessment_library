@@ -79,18 +79,18 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
         Route::post('/book/status/unavailable/{book}', [BookController::class, 'unavailableStatus']);
 
         //book loan 
-        Route::resource('/book_loan', BookLoanController::class);
+        Route::resource('/loan', BookLoanController::class);
         //borrow a book
         Route::post('/book/borrow/{bookId}', [BookLoanController::class, 'borrowBook']);
         
         //Book loan status
-        Route::post('/book/loan/approve/{book_loan}', [BookLoanController::class, 'ApproveBookLoan']);
-        Route::post('/book/loan/reject/{book_loan}', [BookLoanController::class, 'RejectBookLoan']);
+        Route::post('/loan/approve/{loan}', [BookLoanController::class, 'ApproveBookLoan']);
+        Route::post('/loan/reject/{loan}', [BookLoanController::class, 'RejectBookLoan']);
 
         //Book loan Extend date
-        Route::post('/book/extend/loan/{book_loan}', [BookLoanController::class, 'extendLoan']);
+        Route::post('/extend/loan/{loan}', [BookLoanController::class, 'extendLoan']);
 
-        Route::post('/book/loan/return/{book_loan}', [BookLoanController::class, 'returnBook']);
+        Route::post('/loan/return/{loan}', [BookLoanController::class, 'returnBook']);
 
         
         Route::resource('/category', CategoryController::class);

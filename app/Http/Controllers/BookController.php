@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\User;
+use App\Models\Subcategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -22,9 +23,9 @@ class BookController extends Controller
             $available_books = Book::where('status', 'AVAILABLE')->get();
             $unavailable_books = Book::where('status', 'UNAVAILABLE')->get();
 
-            foreach ($books as $book) {
-                $book_category = $book->category;
-                $book_sub_category = $book->subCategory;
+            foreach ($books as $book_data) {
+                $book_category = $book_data->category;
+                $book_sub_category = $book_data->subcategory;
             }
 
             $available = $available_books->count();
@@ -61,10 +62,9 @@ class BookController extends Controller
             'name' => ['required', 'string'],
             'publisher' => ['required', 'string'],
             'isbn' => ['required', 'unique:books'],
-            'category' => ['required'],
             'subcategory' => ['required'],
             'page' => ['required', 'integer'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'], // Allow various image formats with a max size of 2MB
+            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:5048'], // Allow various image formats with a max size of 5MB
         ]);
 
         if ($validator->fails()) {
@@ -77,16 +77,16 @@ class BookController extends Controller
             //book's image
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
-                $fileName = $id;
+                $fileName = $random_id;
 
                 //path in the storage/app/public directory
-
                 $path = $file->storeAs('IMAGES/BOOKS', $fileName, 'public');
 
             } else {
                 $path = null; // If no file is uploaded, set path to null
             }
 
+            $category = Subcategory::where('id', $request->subcategory)->first();
 
             // Create user
             $book = new Book($request->all());
@@ -94,7 +94,7 @@ class BookController extends Controller
             $book->id = $random_id;
             $book->added_by = Auth::id();
             $book->image = $path;
-            $book->category_id = $request->category;
+            $book->category_id = $category->category_id;
             $book->subcategory_id = $request->subcategory;
             $book->image = $path;
 
@@ -113,9 +113,13 @@ class BookController extends Controller
     public function show(Book $book)
     {
         try{
+
+            $book_category = $book->category;
+            $book_sub_category = $book->subcategory;
+
             $data = array(
                 'message' => 'success',
-                'user' => $book,
+                'book' => $book,
                 'status' => 200
             );
             return response()->json($data, 200);
@@ -138,10 +142,9 @@ class BookController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string'],
             'publisher' => ['required', 'string'],
-            'category' => ['required'],
             'subcategory' => ['required'],
             'page' => ['required', 'integer'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'], // Allow various image formats with a max size of 2MB
+            // 'image' => ['nullable', 'mimes:jpeg,png,jpg,gif,svg', 'max:5048'], // Allow various image formats with a max size of 5MB
 
         ]);
 
@@ -165,7 +168,7 @@ class BookController extends Controller
                 }
         
                 $file = $request->file('image');
-                $fileName = $id;
+                $fileName = $random_id;
 
                 //path in the storage/app/public directory
 
@@ -175,7 +178,12 @@ class BookController extends Controller
                 $path = null; // If no file is uploaded, set path to null
             }
                 
-            $book->image = $path;
+            $category = Subcategory::where('id', $request->subcategory)->first();
+
+            $book->id = $random_id;
+            $book->category_id = $category->category_id;
+            $book->subcategory_id = $request->subcategory;
+            // $book->image = $path;
             $book->added_by = Auth::id();            
         
             $book->save();
@@ -200,12 +208,28 @@ class BookController extends Controller
                     File::delete($book->image);
                 }
             }
-            // Soft delete the book The book will not be deleted instead the property deleted-at with contain the value
+
+            //Prevent to delete a borrwed book
+            if($book->loans){
+                foreach ($book->loans as $book_loan) {
+                    if($book_loan->extend == 1 OR $book_loan->status == 'APPROVED' ){
+                        return response()->json(['message' => 'This book can\'t be deleted because it has been borrowed !', 'status' => 400], 400);
+                    }
+                }
+            }
+
+            //prevent to delete an available book
+            if($book->status == 'AVAILABLE' ){
+                return response()->json(['message' => 'This book can\'t be deleted because it\'s available!', 'status' => 411], 411);
+            }
+
+
+            // Soft delete the book will not be deleted instead the field deleted_at will take the value
             $book->delete();
     
             return response()->json(['message' => 'Book deleted successfully!', 'status' => 200], 200);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['error', 'Book not found! ' . $e->getMessage(), 'status' => 411], 411);
+            return response()->json(['error', 'Book not found! ' . $e->getMessage(), 'status' => 400], 400);
         } catch (\Exception $e) {
             return response()->json(['error', 'An error occurred while deleting the book. ' . $e->getMessage(), 'status' => 500], 500);
         }

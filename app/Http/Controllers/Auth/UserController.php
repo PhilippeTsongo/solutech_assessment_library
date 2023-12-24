@@ -37,7 +37,7 @@ class UserController extends Controller
             return response()->json($data);
             
             }catch(\Exception $e){
-                    return response()->json(['message' => 'Failed to fetch users', 'status' => 500]);
+                    return response()->json(['message' => 'Failed to fetch users ' .$e->getMessage(), 'status' => 500]);
         }
     }
 
