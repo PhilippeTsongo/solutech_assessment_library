@@ -38,16 +38,16 @@ class DashboardController extends Controller
             $extendedLoans = BookLoan::where('extended', 'YES')->get();
             $returnedLoans = BookLoan::where('status', 'RETURNED')->get();
 
-
             return response()->json([
                 'loans' => $totalLoans->count(),
                 'pending' => $pendingLoans->count(),
                 'approved' => $approvedLoans->count(),
-                'rejecetd' => $rejectedLoans->count(),
+                'rejected' => $rejectedLoans->count(),
                 'extended' => $extendedLoans->count(),
                 'returned' => $returnedLoans->count(),
             ]);
             
+
         }catch(\Exception $e){
             return response()->json(['message' => 'Failed to fetch data ' .$e->getMessage(), 'status' => 500]);
         }
