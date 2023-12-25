@@ -236,7 +236,7 @@ class BookLoanController extends Controller
 
             // Check if the loan is approved and not already returned
             if ($book_loan->status !== 'APPROVED' || $book_loan->return_date !== null) {
-                return response()->json(['message' => 'Invalid operation.', 'status' => 411], 411);
+                return response()->json(['message' => 'Invalid operation. This book is already returned', 'status' => 411], 411);
             }
 
             $today = date('Y-m-d');

@@ -24,6 +24,8 @@ use App\Http\Controllers\Auth\UserRoleController;
 use App\Http\Controllers\BorrowBookController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\DashboardController;
+
 
 
 
@@ -95,6 +97,9 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
         
         Route::resource('/category', CategoryController::class);
         Route::resource('/subcategory', SubcategoryController::class);        
+
+        Route::get('/dashboard/book', [DashboardController::class, 'books']);
+        Route::get('/dashboard/loan', [DashboardController::class, 'loans']);
 
 
     });
