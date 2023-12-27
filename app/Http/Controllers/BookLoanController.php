@@ -12,50 +12,99 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class BookLoanController extends Controller
 {
    
+    //access level control: only admin can access to ApproveBookLoan and RejectBookLoan
+    public function __construct()
+    {
+        $this->middleware(['IsAdmin'])->only('ApproveBookLoan', 'RejectBookLoan');
+    }
+
     //List of loan function
     public function index()
     {
         try{
-            $loans = BookLoan::orderBy('created_at', 'DESC')->get();
 
-            $pending = BookLoan::where('status', 'PENDING')->get();
-            $approved = BookLoan::where('status', 'APPROVED')->get();
-            $extended = BookLoan::where('extended', 1)->get();
-            $returned = BookLoan::where('status', 'RETURNED')->get();
-            $rejected = BookLoan::where('status', 'REJECTED')->get();
+            #============================================================================================
+            #User should be able only to see his loans whereas the admin should be able to see all loans|
+            #============================================================================================
 
+            //get User role 
+            $role = Auth::user()->role_id;
+            $auth_user = Auth::user()->id;
+            if($role == 1){                
 
-            foreach ($loans as $loan) {
-                $loan_user = $loan->user;
-                $loan_book = $loan->book;
+                $loans = BookLoan::orderBy('created_at', 'DESC')->get();
+
+                $pending = BookLoan::where('status', 'PENDING')->get();
+                $approved = BookLoan::where('status', 'APPROVED')->get();
+                $extended = BookLoan::where('extended', 1)->get();
+                $returned = BookLoan::where('status', 'RETURNED')->get();
+                $rejected = BookLoan::where('status', 'REJECTED')->get();
+
+                foreach ($loans as $loan) {
+                    $loan_user = $loan->user;
+                    $loan_book = $loan->book;
+                }
+
+                $total_pending = $pending->count();
+                $total_approved = $approved->count();
+                $total_extended = $extended->count();
+                $total_returned = $returned->count();
+                $total_rejected = $rejected->count();
+
+                $total = $loans->count();
+
+                $data = array(
+                    'message' => "success",
+                    'loans' => $loans,
+                    'pending' => $total_pending,
+                    'approved' => $total_approved,
+                    'extended' => $total_extended,
+                    'returned' => $total_returned,
+                    'rejected' => $total_rejected,
+                    'total' => $total,
+                    'status' => 200
+                );
+            }else{
+                $loans = BookLoan::orderBy('created_at', 'DESC')->where('user_id', $auth_user)->get();
+
+                $pending = BookLoan::where('status', 'PENDING')->where('user_id', $auth_user)->get();
+                $approved = BookLoan::where('status', 'APPROVED')->where('user_id', $auth_user)->get();
+                $extended = BookLoan::where('extended', 1)->where('user_id', $auth_user)->get();
+                $returned = BookLoan::where('status', 'RETURNED')->where('user_id', $auth_user)->get();
+                $rejected = BookLoan::where('status', 'REJECTED')->where('user_id', $auth_user)->get();
+
+                foreach ($loans as $loan) {
+                    $loan_user = $loan->user;
+                    $loan_book = $loan->book;
+                }
+
+                $total_pending = $pending->count();
+                $total_approved = $approved->count();
+                $total_extended = $extended->count();
+                $total_returned = $returned->count();
+                $total_rejected = $rejected->count();
+
+                $total = $loans->count();
+
+                $data = array(
+                    'message' => "success",
+                    'loans' => $loans,
+                    'pending' => $total_pending,
+                    'approved' => $total_approved,
+                    'extended' => $total_extended,
+                    'returned' => $total_returned,
+                    'rejected' => $total_rejected,
+                    'total' => $total,
+                    'status' => 200
+                );
             }
-
-            $total_pending = $pending->count();
-            $total_approved = $approved->count();
-            $total_extended = $extended->count();
-            $total_returned = $returned->count();
-            $total_rejected = $rejected->count();
-
-            $total = $loans->count();
-
-            $data = array(
-                'message' => "success",
-                'loans' => $loans,
-                'pending' => $total_pending,
-                'approved' => $total_approved,
-                'extended' => $total_extended,
-                'returned' => $total_returned,
-                'rejected' => $total_rejected,
-                'total' => $total,
-                'status' => 200
-            );
-                
             return response()->json($data, 200);
             
-            }catch(\Exception $e){
-                    return response()->json(['message' => 'Failed to fetch loans' . $e->getMessage(), 'status' => 500]);
+        }catch(\Exception $e){
+                return response()->json(['message' => 'Failed to fetch loans' . $e->getMessage(), 'status' => 500]);
         }
     }
+    
 
     //Unique loan function
     public function show($loan)
@@ -107,14 +156,16 @@ class BookLoanController extends Controller
 
             //check the book availability before borrowing
             if($book->status == 'UNAVAILABLE'){
-                return response()->json(['message' => 'The book is not available!', 'status' => 411], 411);
+                return response()->json(['message' => 'The book is not available!', 'status' => 400], 400);
             }
 
             //Deny the user from borrowing one book twice
             if($book->id == BookLoan::where('book_id', $book->id)
-                                ->where('user_id', Auth::user()->id)
-                                ->where('status', 'APPROVED')
-                                ->exists())
+                    ->where('user_id', Auth::user()->id)
+                    ->where(function ($query) {
+                        $query->where('status', 'APPROVED')
+                            ->orWhere('status', 'PENDING');
+                    })->exists()) 
             {
                 return response()->json(['message' => 'You have already sent the request to borrow this book!', 'status' => 400], 400);
             }

@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 
 class RoleController extends Controller
 {
+    //only admin can access to all these functions
+    public function __construct()
+    {
+        $this->middleware(['IsAdmin']);
+    }
+
     public function index()
     {
         $roles = Role::with(['staffs'])->get();
@@ -26,12 +32,6 @@ class RoleController extends Controller
         // return view('course.index', compact('role'));
     }
 
-    public function create()
-    {
-    //     $lecturers = Lecturer::all();
-    //     $Promotions = Promotion::all();
-        // return view('course.create', compact('promotions', 'lecturers'));
-    }
 
     public function store(Request $request)
     {
@@ -78,11 +78,6 @@ class RoleController extends Controller
         // return view('course.show', compact('course'));
     }
 
-    public function edit(Role $role)
-    {
-        // $lecturers = Lecturer::all();
-        // return view('course.edit', compact('course', 'lecturers', 'Promotions'));
-    }
     
     public function update(Request $request, Role $role)
     {

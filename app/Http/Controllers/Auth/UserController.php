@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    //only admin can access to all these functions
+    public function __construct()
+    {
+        $this->middleware(['IsAdmin']);
+    }
+
     public function index()
     {
         try{

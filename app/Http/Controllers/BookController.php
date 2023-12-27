@@ -14,7 +14,12 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class BookController extends Controller
 {
-    
+    //access level control: only admin can access to store, edit, update, destroy, availableStatus and unavailableStatus
+    public function __construct()
+    {
+        $this->middleware(['IsAdmin'])->only('edit', 'store', 'update', 'destroy', 'availableStatus', 'unavailableStatus');
+    }
+
     public function index()
     {
         try{
@@ -47,13 +52,6 @@ class BookController extends Controller
                     return response()->json(['message' => 'Failed to fetch books ' .$e->getMessage(), 'status' => 500]);
         }
     }
-
-    
-    public function create()
-    {
-        
-    }
-
     
     public function store(Request $request)
     {

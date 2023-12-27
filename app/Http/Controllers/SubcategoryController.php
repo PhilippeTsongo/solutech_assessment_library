@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Validator;
 
 class SubcategoryController extends Controller
 {
+
+    //only admin can acceess this 
+    public function __construct()
+    {
+        $this->middleware(['IsAdmin']);
+    }
+
     public function index()
     {
         try{
@@ -32,13 +39,6 @@ class SubcategoryController extends Controller
             }catch(\Exception $e){
                     return response()->json(['message' => 'Failed to fetch sub categories ' . $e->getMessage() , 'status' => 500]);
         }
-    }
-
-    //CREATE FUNCTION
-    public function create()
-    {
-
-       
     }
 
     //STORE FUNCTION

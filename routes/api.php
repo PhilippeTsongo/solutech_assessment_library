@@ -8,10 +8,6 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
 */
 
 use Illuminate\Support\Facades\Artisan;
@@ -27,20 +23,13 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 
 
-
-
-// Route::middleware('api')->group(function () {
-    // Your API routes here
-
-    Route::get('/', function () { 
-        return view('index');
-    })->middleware(['auth']);
-
     //optimization routes
     Route::get('/optimize', function(){
         $exitCode = Artisan::call('optimize');
         return 'DONE';
     });
+
+    //caching clear route
     Route::get('/cache', function(){
         $exitCode = Artisan::call('cache:clear');
         $exitCode = Artisan::call('config:cache');
@@ -68,11 +57,6 @@ use App\Http\Controllers\DashboardController;
         //Log out
         Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
          
-        //profile
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
         //book
         Route::resource('/book', BookController::class);
 
@@ -100,6 +84,7 @@ use App\Http\Controllers\DashboardController;
 
         Route::get('/dashboard/book', [DashboardController::class, 'books']);
         Route::get('/dashboard/loan', [DashboardController::class, 'loans']);
+        Route::get('/dashboard/user', [DashboardController::class, 'users']);
 
 
     });

@@ -8,6 +8,13 @@ use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
+
+    //only admin can acceess this 
+    public function __construct()
+    {
+        $this->middleware(['IsAdmin']);
+    }
+
     public function index()
     {
         try{

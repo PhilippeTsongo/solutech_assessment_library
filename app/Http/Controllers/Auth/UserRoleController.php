@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Validator;
 
 class UserRoleController extends Controller
 {
+
+    //only admin can access to all these functions
+    public function __construct()
+    {
+        $this->middleware(['IsAdmin']);
+    }
+
     public function index()
     {
         try{
@@ -27,13 +34,6 @@ class UserRoleController extends Controller
         }catch(\Exception $e){
             return response()->json(['message' => 'Failed to fetch users role', 'status' => 500]);
         }
-    }
-
-    //CREATE FUNCTION
-    public function create()
-    {
-
-       
     }
 
     //STORE FUNCTION

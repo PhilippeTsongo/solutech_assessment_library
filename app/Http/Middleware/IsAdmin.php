@@ -16,11 +16,11 @@ class IsAdmin
         {
             if(Auth()->user()->role)
             {
-                if(Auth()->user()->role->name == '1')
+                if(Auth()->user()->role_id == '1')
                 {
                     return $next($request);
                 }else{
-                    return response()->json(['error' => 'Forbidden', 'status' => 403]);
+                    return response()->json(['error' => 'Forbidden! Only administrators can access', 'status' => 403]);
                 }
             }
         }
